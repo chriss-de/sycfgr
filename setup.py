@@ -14,7 +14,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     author='Christoph Hartmann',
     author_email='mail_to_chriss@posteo.net',
-    url='https://github.com/chriss-de/sycfg',
+    url='https://github.com/chriss-de/sycfgr',
     py_modules=['sycfgr'],
     python_requires='>=3.7',
     classifiers=[
