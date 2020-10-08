@@ -32,9 +32,15 @@ class Loader(yaml.SafeLoader):
     def environ_loader(self, node):
         return os.environ.get(self.construct_scalar(node), None)
 
+    def yaml_loader(self, node):
+        filename = os.path.join(self._root, self.construct_scalar(node))
+        with open(filename, 'r') as f:
+            return yaml.load(f, Loader)
+
 
 Loader.add_constructor('!text_file', Loader.text_file_loader)
 Loader.add_constructor('!env', Loader.environ_loader)
+Loader.add_constructor('!yaml', Loader.yaml_loader)
 
 
 def refresh_config_files():

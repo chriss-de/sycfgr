@@ -9,7 +9,7 @@ with open(os.path.join(here, 'README.md'), 'r') as fh:
 
 setuptools.setup(
     name='sycfgr',
-    version='0.0.1',
+    version='0.0.2',
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Christoph Hartmann',
