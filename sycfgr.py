@@ -1,5 +1,7 @@
 import os
 import yaml
+import configparser
+import logging
 
 _config = {}
 _config_files = []
@@ -33,14 +35,39 @@ class Loader(yaml.SafeLoader):
         return os.environ.get(self.construct_scalar(node), None)
 
     def yaml_loader(self, node):
-        filename = os.path.join(self._root, self.construct_scalar(node))
+        node_info = self.construct_scalar(node).split(' ')
+        filename = os.path.join(self._root, node_info[0])
         with open(filename, 'r') as f:
-            return yaml.load(f, Loader)
+            inc_yaml = yaml.load(f, Loader)
+            if node_info[1] is None:
+                return inc_yaml
+            else:
+                return _get(node_info[1], None, inc_yaml)
+
+    def ini_loader(self, node):
+        node_info = self.construct_scalar(node).split(' ')
+        filename = os.path.join(self._root, node_info[0])
+        with open(filename, 'r') as f:
+            config = configparser.ConfigParser(allow_no_value=True)
+            try:
+                config.read_file(f)
+                if len(node_info) == 3:
+                    return config[node_info[1]][node_info[2]]
+                if len(node_info) == 2:
+                    entries = {}
+                    for key, value in config.items(node_info[1]):
+                        entries[key] = value
+                    return entries
+                return None
+            except Exception as e:
+                logging.warning(str(e))
+                return None
 
 
 Loader.add_constructor('!text_file', Loader.text_file_loader)
 Loader.add_constructor('!env', Loader.environ_loader)
 Loader.add_constructor('!yaml', Loader.yaml_loader)
+Loader.add_constructor('!ini', Loader.ini_loader)
 
 
 def refresh_config_files():
@@ -76,16 +103,21 @@ def load_config():
     reload_config()
 
 
-def get(key, default=None):
+def _get(key, default, source):
     """Get config value from config by key. can access nested keys with '.' seperator"""
-    global _config
-    result = _config
+    result = source
     for keyPathElement in key.split('.'):
         if type(result) is not dict:
             result = default
             break
         result = result.get(keyPathElement, default)
     return result
+
+
+def get(key, default=None):
+    """Get config value from config by key. can access nested keys with '.' seperator"""
+    global _config
+    return _get(key, default, _config)
 
 
 def get_config_sources_from_args(cli_args):
